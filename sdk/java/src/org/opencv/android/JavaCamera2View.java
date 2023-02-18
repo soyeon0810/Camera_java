@@ -23,6 +23,7 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.ViewGroup.LayoutParams;
 
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -183,7 +184,8 @@ public class JavaCamera2View extends CameraBridgeViewBase {
                     assert (planes.length == 3);
                     assert (image.getFormat() == mPreviewFormat);
 
-                    JavaCamera2Frame tempFrame = new JavaCamera2Frame(image);
+                    int rotation = JavaCamera2View.super.getOrientation();
+                    JavaCamera2Frame tempFrame = new JavaCamera2Frame(image, rotation);
                     deliverAndDrawFrame(tempFrame);
                     tempFrame.release();
                     image.close();
@@ -340,6 +342,53 @@ public class JavaCamera2View extends CameraBridgeViewBase {
             return mGray;
         }
 
+
+
+        public JavaCamera2Frame(Image image, int rotation) {
+            mGray = new Mat();
+            mGr = new Mat();
+            mRotation = rotation;
+        }
+
+        public void release() {
+            mGray.release();
+            mGr.release();
+        }
+
+        private Mat mGray;
+        private Mat mGr;
+        private Mat mRgba;
+        private int mRotation;
+
+        @Override
+        public Mat mGray() {
+            Image.Plane[] planes = mImage.getPlanes();
+            int w = mImage.getWidth();
+            int h = mImage.getHeight();
+            assert (planes[0].getPixelStride() == 1);
+            ByteBuffer y_plane = planes[0].getBuffer();
+            int y_plane_step = planes[0].getRowStride();
+
+            mGr = new Mat(h, w, CvType.CV_8UC1, y_plane, y_plane_step);
+
+            switch (mRotation) {
+                case 0:
+                    Core.rotate(mGr, mGr,
+                            Core.ROTATE_90_CLOCKWISE);
+                    break;
+                case 180:
+                    Core.rotate(mGr, mGr,
+                            Core.ROTATE_90_COUNTERCLOCKWISE);
+                    break;
+                case 270:
+                    Core.flip(mGr, mGr, 0);
+                    break;
+            }
+
+
+            return mGr;
+        }
+
         @Override
         public Mat rgba() {
             Image.Plane[] planes = mImage.getPlanes();
@@ -426,22 +475,5 @@ public class JavaCamera2View extends CameraBridgeViewBase {
                 return mRgba;
             }
         }
-
-
-        public JavaCamera2Frame(Image image) {
-            super();
-            mImage = image;
-            mRgba = new Mat();
-            mGray = new Mat();
-        }
-
-        public void release() {
-            mRgba.release();
-            mGray.release();
-        }
-
-        private Image mImage;
-        private Mat mRgba;
-        private Mat mGray;
-    };
+    }
 }

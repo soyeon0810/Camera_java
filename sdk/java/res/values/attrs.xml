@@ -2,6 +2,7 @@
 <resources>
     <declare-styleable name = "CameraBridgeViewBase" >
        <attr name="show_fps" format="boolean"/>
+        <attr name="show_rotation" format="boolean"/>
        <attr name="camera_id" format="integer" >
           <enum name="any" value="-1" />
           <enum name="back" value="99" />

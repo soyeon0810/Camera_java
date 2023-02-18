@@ -15,8 +15,11 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.hardware.SensorManager;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -56,6 +59,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     public static final int CAMERA_ID_FRONT = 98;
     public static final int RGBA = 1;
     public static final int GRAY = 2;
+    public static final int MGRAY = 3;
 
     public CameraBridgeViewBase(Context context, int cameraId) {
         super(context);
@@ -63,6 +67,20 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         getHolder().addCallback(this);
         mMaxWidth = MAX_UNSPECIFIED;
         mMaxHeight = MAX_UNSPECIFIED;
+    }
+
+    public void enableRotationMeter() {
+        if (mRotationMeter == null) {
+            mRotationMeter = new RotationMeter();
+            mRotationMeter.init();
+            mRotationMeter.updateMeter(rotation);
+        }
+    }
+
+
+
+    public void disableRotationMeter() {
+        mRotationMeter = null;
     }
 
     public CameraBridgeViewBase(Context context, AttributeSet attrs) {
@@ -74,6 +92,14 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         TypedArray styledAttrs = getContext().obtainStyledAttributes(attrs, R.styleable.CameraBridgeViewBase);
         if (styledAttrs.getBoolean(R.styleable.CameraBridgeViewBase_show_fps, false))
             enableFpsMeter();
+        else
+            disableFpsMeter();
+
+        if (styledAttrs.getBoolean(
+                R.styleable.CameraBridgeViewBase_show_rotation, false))
+            enableRotationMeter();
+        else
+            disableRotationMeter();
 
         mCameraIndex = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_id, -1);
 
@@ -89,6 +115,10 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
      */
     public void setCameraIndex(int cameraIndex) {
         this.mCameraIndex = cameraIndex;
+    }
+
+    public int getOrientation() {
+
     }
 
     public interface CvCameraViewListener {
@@ -129,6 +159,8 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
          */
         public void onCameraViewStopped();
 
+        void onCreate(Bundle savedInstanceState);
+
         /**
          * This method is invoked when delivery of the frame needs to be done.
          * The returned values - is a modified frame which needs to be displayed on the screen.
@@ -137,41 +169,44 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         public Mat onCameraFrame(CvCameraViewFrame inputFrame);
     };
 
-    protected class CvCameraViewListenerAdapter implements CvCameraViewListener2  {
-        public CvCameraViewListenerAdapter(CvCameraViewListener oldStypeListener) {
-            mOldStyleListener = oldStypeListener;
-        }
+        protected class CvCameraViewListenerAdapter implements CvCameraViewListener2 {
+            public CvCameraViewListenerAdapter(CvCameraViewListener oldStypeListener) {
+                mOldStyleListener = oldStypeListener;
+            }
 
-        public void onCameraViewStarted(int width, int height) {
-            mOldStyleListener.onCameraViewStarted(width, height);
-        }
+            public void onCameraViewStarted(int width, int height) {
+                mOldStyleListener.onCameraViewStarted(width, height);
+            }
 
-        public void onCameraViewStopped() {
-            mOldStyleListener.onCameraViewStopped();
-        }
+            public void onCameraViewStopped() {
+                mOldStyleListener.onCameraViewStopped();
+            }
 
-        public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-             Mat result = null;
-             switch (mPreviewFormat) {
-                case RGBA:
-                    result = mOldStyleListener.onCameraFrame(inputFrame.rgba());
-                    break;
-                case GRAY:
-                    result = mOldStyleListener.onCameraFrame(inputFrame.gray());
-                    break;
-                default:
-                    Log.e(TAG, "Invalid frame format! Only RGBA and Gray Scale are supported!");
-            };
+            public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+                Mat result = null;
+                switch (mPreviewFormat) {
+                    case RGBA:
+                        result = mOldStyleListener.onCameraFrame(inputFrame.rgba());
+                        break;
+                    case GRAY:
+                        result = mOldStyleListener.onCameraFrame(inputFrame.gray());
+                        break;
+                    case MGRAY:
+                        result = mOldStyleListener.
+                                onCameraFrame(inputFrame.mGray());
+                    default:
+                        Log.e(TAG, "Invalid frame format! Only RGBA and Gray Scale are supported!");
+                };
 
-            return result;
-        }
+                return result;
+            }
 
-        public void setFrameFormat(int format) {
+           public void setFrameFormat(int format) {
             mPreviewFormat = format;
         }
 
-        private int mPreviewFormat = RGBA;
-        private CvCameraViewListener mOldStyleListener;
+           private int mPreviewFormat = RGBA;
+           private CvCameraViewListener mOldStyleListener;
     };
 
     /**
@@ -189,6 +224,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
          * This method returns single channel gray scale Mat with frame
          */
         public Mat gray();
+        public Mat mGray();
     };
 
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
@@ -395,6 +431,36 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         }
     }
 
+    protected RotationMeter mRotationMeter = null;
+    private int rotation = 0;
+    public static boolean isBetween(int x, int lower, int upper) {
+        return lower <= x && x <= upper;
+    }
+    private void detectRotation(Context context) {
+        //screen rotation
+        OrientationEventListener orientationEventListener =
+                new OrientationEventListener(
+                        context, SensorManager.SENSOR_DELAY_NORMAL) {
+                    @Override
+                    public void onOrientationChanged(int orientation) {
+                        if (isBetween(orientation, 45, 134)) {
+                            rotation = 270;
+                        } else if (isBetween(orientation, 135, 224)) {
+                            rotation = 180;
+                        } else if (isBetween(orientation, 225, 314)) {
+                            rotation = 90;
+                        } else {
+                            rotation = 0;
+                        }
+                    }
+                };
+        if (orientationEventListener.canDetectOrientation()) {
+            orientationEventListener.enable();
+        } else {
+            orientationEventListener.disable();
+        }
+    }
+
     /**
      * This method shall be called by the subclasses when they have valid
      * object and want it to be delivered to external client (via callback) and
@@ -446,6 +512,11 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
                 if (mFpsMeter != null) {
                     mFpsMeter.measure();
                     mFpsMeter.draw(canvas, 20, 30);
+                }
+
+                if (mRotationMeter != null) {
+                    mRotationMeter.updateMeter(rotation);
+                    mRotationMeter.draw(canvas, 150, 30);
                 }
                 getHolder().unlockCanvasAndPost(canvas);
             }

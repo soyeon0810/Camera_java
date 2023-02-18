@@ -23,6 +23,10 @@ public class FpsMeter {
     int                         mWidth = 0;
     int                         mHeight = 0;
 
+    public void setResolution(int mFrameWidth, int mFrameHeight) {
+
+    }
+
     public void init() {
         mFramesCounter = 0;
         mFrequency = Core.getTickFrequency();
@@ -33,7 +37,6 @@ public class FpsMeter {
         mPaint.setColor(Color.BLUE);
         mPaint.setTextSize(20);
     }
-
     public void measure() {
         if (!mIsInitialized) {
             init();
@@ -53,14 +56,9 @@ public class FpsMeter {
         }
     }
 
-    public void setResolution(int width, int height) {
-        mWidth = width;
-        mHeight = height;
-    }
-
     public void draw(Canvas canvas, float offsetx, float offsety) {
         Log.d(TAG, mStrfps);
         canvas.drawText(mStrfps, offsetx, offsety, mPaint);
     }
 
-}
+    }

@@ -316,6 +316,11 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
             return mYuvFrameData.submat(0, mHeight, 0, mWidth);
         }
 
+        @Override  // a copy of gray()
+        public Mat mGray() {
+            return mYuvFrameData.submat(0, mHeight, 0, mWidth);
+        }
+
         @Override
         public Mat rgba() {
             if (mPreviewFormat == ImageFormat.NV21)

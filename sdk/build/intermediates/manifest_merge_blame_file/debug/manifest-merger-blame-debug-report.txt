@@ -8,4 +8,8 @@
 7        android:targetSdkVersion="26" />
 7-->C:\Users\jooso\AndroidStudioProjects\MyApplication\sdk\java\AndroidManifest.xml
 8
-9</manifest>
+9    <uses-permission android:name="android.permission.CAMERA" />
+9-->C:\Users\jooso\AndroidStudioProjects\MyApplication\sdk\java\AndroidManifest.xml:5:5-65
+9-->C:\Users\jooso\AndroidStudioProjects\MyApplication\sdk\java\AndroidManifest.xml:5:22-62
+10
+11</manifest>
