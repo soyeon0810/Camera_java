@@ -7,6 +7,7 @@ import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
+import android.media.Image;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -319,6 +320,21 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
         @Override  // a copy of gray()
         public Mat mGray() {
             return mYuvFrameData.submat(0, mHeight, 0, mWidth);
+        }
+
+        @Override
+        public Mat gray(Image mImage) {
+            return null;
+        }
+
+        @Override
+        public Mat mGray(Image mImage) {
+            return null;
+        }
+
+        @Override
+        public Mat rgba(Image mImage) {
+            return null;
         }
 
         @Override

@@ -329,9 +329,25 @@ public class JavaCamera2View extends CameraBridgeViewBase {
         return true;
     }
 
+
     private class JavaCamera2Frame implements CvCameraViewFrame {
         @Override
+        public Mat rgba() {
+            return null;
+        }
+
+        @Override
         public Mat gray() {
+            return null;
+        }
+
+        @Override
+        public Mat mGray() {
+            return null;
+        }
+
+        @Override
+        public Mat gray(Image mImage) {
             Image.Plane[] planes = mImage.getPlanes();
             int w = mImage.getWidth();
             int h = mImage.getHeight();
@@ -361,7 +377,7 @@ public class JavaCamera2View extends CameraBridgeViewBase {
         private int mRotation;
 
         @Override
-        public Mat mGray() {
+        public Mat mGray(Image mImage) {
             Image.Plane[] planes = mImage.getPlanes();
             int w = mImage.getWidth();
             int h = mImage.getHeight();
@@ -390,7 +406,7 @@ public class JavaCamera2View extends CameraBridgeViewBase {
         }
 
         @Override
-        public Mat rgba() {
+        public Mat rgba(Image mImage) {
             Image.Plane[] planes = mImage.getPlanes();
             int w = mImage.getWidth();
             int h = mImage.getHeight();

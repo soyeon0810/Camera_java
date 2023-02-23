@@ -16,6 +16,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.hardware.SensorManager;
+import android.media.Image;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -118,7 +119,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     }
 
     public int getOrientation() {
-
+        return 0;
     }
 
     public interface CvCameraViewListener {
@@ -169,7 +170,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         public Mat onCameraFrame(CvCameraViewFrame inputFrame);
     };
 
-        protected class CvCameraViewListenerAdapter implements CvCameraViewListener2 {
+    protected class CvCameraViewListenerAdapter implements CvCameraViewListener2 {
             public CvCameraViewListenerAdapter(CvCameraViewListener oldStypeListener) {
                 mOldStyleListener = oldStypeListener;
             }
@@ -182,7 +183,12 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
                 mOldStyleListener.onCameraViewStopped();
             }
 
-            public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+
+        }
+
+        public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
                 Mat result = null;
                 switch (mPreviewFormat) {
                     case RGBA:
@@ -225,6 +231,12 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
          */
         public Mat gray();
         public Mat mGray();
+
+        Mat gray(Image mImage);
+
+        Mat mGray(Image mImage);
+
+        Mat rgba(Image mImage);
     };
 
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
